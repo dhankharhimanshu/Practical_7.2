@@ -11,6 +11,133 @@ CREATE TABLE Product (
   Quantity INT
 );
 
+import java.util.*;
+import java.util.stream.*;
+import java.util.Comparator;
+
+class Employee {
+    String name;
+    int age;
+    double salary;
+
+    Employee(String name, int age, double salary) {
+        this.name = name;
+        this.age = age;
+        this.salary = salary;
+    }
+
+    public String toString() {
+        return name + " | Age: " + age + " | Salary: " + salary;
+    }
+}
+
+class Student {
+    String name;
+    double marks;
+
+    Student(String name, double marks) {
+        this.name = name;
+        this.marks = marks;
+    }
+
+    public String toString() {
+        return name + " | Marks: " + marks;
+    }
+}
+
+class Product {
+    String name;
+    double price;
+    String category;
+
+    Product(String name, double price, String category) {
+        this.name = name;
+        this.price = price;
+        this.category = category;
+    }
+
+    public String toString() {
+        return name + " | " + category + " | Price: " + price;
+    }
+}
+
+public class LambdaStreamDemo {
+    public static void main(String[] args) {
+
+        // ---------------- Part A: Sorting Employees ----------------
+        System.out.println("=== Part A: Sorting Employee Objects ===");
+        List<Employee> employees = Arrays.asList(
+            new Employee("Ravi", 30, 55000),
+            new Employee("Anita", 25, 65000),
+            new Employee("Karan", 28, 48000),
+            new Employee("Meena", 35, 72000)
+        );
+
+        System.out.println("\nSorted by Name (Alphabetical):");
+        employees.stream()
+                 .sorted((e1, e2) -> e1.name.compareTo(e2.name))
+                 .forEach(System.out::println);
+
+        System.out.println("\nSorted by Age (Ascending):");
+        employees.stream()
+                 .sorted(Comparator.comparingInt(e -> e.age))
+                 .forEach(System.out::println);
+
+        System.out.println("\nSorted by Salary (Descending):");
+        employees.stream()
+                 .sorted((e1, e2) -> Double.compare(e2.salary, e1.salary))
+                 .forEach(System.out::println);
+
+        // ---------------- Part B: Filtering and Sorting Students ----------------
+        System.out.println("\n=== Part B: Filtering and Sorting Students ===");
+        List<Student> students = Arrays.asList(
+            new Student("Amit", 82.5),
+            new Student("Neha", 68.4),
+            new Student("Rohit", 91.0),
+            new Student("Sita", 74.2),
+            new Student("Vikas", 88.7)
+        );
+
+        System.out.println("\nStudents Scoring Above 75%, Sorted by Marks:");
+        students.stream()
+                .filter(s -> s.marks > 75)
+                .sorted(Comparator.comparingDouble(s -> s.marks))
+                .map(s -> s.name)
+                .forEach(System.out::println);
+
+        // ---------------- Part C: Stream Operations on Product Dataset ----------------
+        System.out.println("\n=== Part C: Stream Operations on Product Dataset ===");
+        List<Product> products = Arrays.asList(
+            new Product("Laptop", 75000, "Electronics"),
+            new Product("Phone", 50000, "Electronics"),
+            new Product("Shoes", 4000, "Fashion"),
+            new Product("Shirt", 2000, "Fashion"),
+            new Product("TV", 65000, "Electronics"),
+            new Product("Watch", 8000, "Fashion")
+        );
+
+        System.out.println("\nGrouping Products by Category:");
+        Map<String, List<Product>> grouped = products.stream()
+            .collect(Collectors.groupingBy(p -> p.category));
+        grouped.forEach((cat, list) -> {
+            System.out.println(cat + ": " + list);
+        });
+
+        System.out.println("\nMost Expensive Product in Each Category:");
+        Map<String, Optional<Product>> maxByCategory = products.stream()
+            .collect(Collectors.groupingBy(
+                p -> p.category,
+                Collectors.maxBy(Comparator.comparingDouble(p -> p.price))
+            ));
+        maxByCategory.forEach((cat, prod) ->
+            System.out.println(cat + ": " + prod.get())
+        );
+
+        double avgPrice = products.stream()
+            .collect(Collectors.averagingDouble(p -> p.price));
+        System.out.println("\nAverage Price of All Products: " + avgPrice);
+    }
+}
 2. Java Program (ProductCRUD.java)
 import java.sql.*;
 import java.util.Scanner;
@@ -103,133 +230,4 @@ public class ProductCRUD {
         }
     }
 }
-Part C: Student Management System Using JDBC and MVC
-1. Model — Student.java
-package model;
 
-public class Student {
-    private int studentID;
-    private String name;
-    private String department;
-    private double marks;
-
-    public Student(int studentID, String name, String department, double marks) {
-        this.studentID = studentID;
-        this.name = name;
-        this.department = department;
-        this.marks = marks;
-    }
-
-    public int getStudentID() { return studentID; }
-    public String getName() { return name; }
-    public String getDepartment() { return department; }
-    public double getMarks() { return marks; }
-}
-
-⚙️ 2. Controller — StudentDAO.java
-package controller;
-import java.sql.*;
-import model.Student;
-
-public class StudentDAO {
-    Connection con;
-
-    public StudentDAO() throws Exception {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        con = DriverManager.getConnection("jdbc:mysql://localhost:3306/schooldb", "root", "password");
-    }
-
-    public void addStudent(Student s) throws SQLException {
-        PreparedStatement ps = con.prepareStatement("INSERT INTO Student VALUES (?, ?, ?, ?)");
-        ps.setInt(1, s.getStudentID());
-        ps.setString(2, s.getName());
-        ps.setString(3, s.getDepartment());
-        ps.setDouble(4, s.getMarks());
-        ps.executeUpdate();
-        System.out.println("✅ Student added successfully!");
-    }
-
-    public void viewAll() throws SQLException {
-        Statement st = con.createStatement();
-        ResultSet rs = st.executeQuery("SELECT * FROM Student");
-        System.out.println("ID\tName\tDept\tMarks");
-        while (rs.next()) {
-            System.out.println(rs.getInt(1) + "\t" + rs.getString(2) + "\t" +
-                               rs.getString(3) + "\t" + rs.getDouble(4));
-        }
-    }
-
-    public void updateMarks(int id, double marks) throws SQLException {
-        PreparedStatement ps = con.prepareStatement("UPDATE Student SET Marks=? WHERE StudentID=?");
-        ps.setDouble(1, marks);
-        ps.setInt(2, id);
-        ps.executeUpdate();
-        System.out.println("✅ Marks updated!");
-    }
-
-    public void deleteStudent(int id) throws SQLException {
-        PreparedStatement ps = con.prepareStatement("DELETE FROM Student WHERE StudentID=?");
-        ps.setInt(1, id);
-        ps.executeUpdate();
-        System.out.println("🗑️ Student deleted!");
-    }
-}
-
-3. View — StudentApp.java
-package view;
-import java.util.*;
-import model.Student;
-import controller.StudentDAO;
-
-public class StudentApp {
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        try {
-            StudentDAO dao = new StudentDAO();
-            while (true) {
-                System.out.println("\n=== STUDENT MENU ===");
-                System.out.println("1. Add Student");
-                System.out.println("2. View All Students");
-                System.out.println("3. Update Marks");
-                System.out.println("4. Delete Student");
-                System.out.println("5. Exit");
-                System.out.print("Enter choice: ");
-                int ch = sc.nextInt();
-
-                switch (ch) {
-                    case 1:
-                        System.out.print("Enter ID, Name, Dept, Marks: ");
-                        int id = sc.nextInt();
-                        String name = sc.next();
-                        String dept = sc.next();
-                        double marks = sc.nextDouble();
-                        dao.addStudent(new Student(id, name, dept, marks));
-                        break;
-                    case 2:
-                        dao.viewAll();
-                        break;
-                    case 3:
-                        System.out.print("Enter ID and new Marks: ");
-                        int sid = sc.nextInt();
-                        double newMarks = sc.nextDouble();
-                        dao.updateMarks(sid, newMarks);
-                        break;
-                    case 4:
-                        System.out.print("Enter ID to delete: ");
-                        int delId = sc.nextInt();
-                        dao.deleteStudent(delId);
-                        break;
-                    case 5:
-                        System.out.println("Exiting...");
-                        return;
-                    default:
-                        System.out.println("Invalid choice!");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            sc.close();
-        }
-    }
-}
